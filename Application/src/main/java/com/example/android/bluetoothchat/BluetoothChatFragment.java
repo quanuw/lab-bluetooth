@@ -98,6 +98,14 @@ public class BluetoothChatFragment extends Fragment {
          *  TODO: Let us know via Toast Bluetooth is not available.
          *  TODO: Then finish() the fragment's attached Activity.
          */
+
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(getActivity(), "Bluetooth NOT Available!", Toast.LENGTH_SHORT).show();
+//        getActivity().finish();
+        }
+
+
     }
 
 
@@ -115,6 +123,11 @@ public class BluetoothChatFragment extends Fragment {
                  * TODO: Otherwise, check if the BluetoothChatService is null, and if so call setupChat() to set it up.
                  */
 
+                Intent intent = new Intent();
+                intent.setAction(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+
+                startActivity(intent);
+
             }
             else if(mChatService == null){
                 setupChat(); //start the chat service
@@ -122,6 +135,8 @@ public class BluetoothChatFragment extends Fragment {
 
         }
     }
+
+
 
     @Override
     public void onDestroy() {
@@ -203,7 +218,12 @@ public class BluetoothChatFragment extends Fragment {
          * TODO: Check if the adapter is in SCAN_MODE_CONNECTABLE_DISCOVERBLE mode
          * TODO: If not, send an Implicit Intent for the ACTION_REQUEST_DISCOVERABLE action (with an extra for the EXTRA_DISCOVERABLE_DURATION)
          */
-
+        if (mBluetoothAdapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE) {
+            Intent intent = new Intent();
+            intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+            intent.setAction(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+            startActivity(intent);
+        }
     }
 
     /**
@@ -227,6 +247,11 @@ public class BluetoothChatFragment extends Fragment {
              * TODO: set the mOutStringBuffer's length to 0 (since we've cleared the message
              * TODO: set the mOutEditText's text to be the (now empty) mOutStringBuffer
              */
+
+            byte[] bytes = message.getBytes();
+            mChatService.write(bytes);
+            mOutStringBuffer.setLength(0);
+            mOutEditText.setText(mOutStringBuffer);
 
         }
     }
@@ -376,6 +401,11 @@ public class BluetoothChatFragment extends Fragment {
          * TODO: Then use the adapter's .getRemoteDevice() to get a reference to the device
          * TODO: Then tell the mChatService to connect to that device!
          */
+
+        Bundle extras = data.getExtras();
+        String macAddress = extras.getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+//        true = socket is secure?
+        mChatService.connect(mBluetoothAdapter.getRemoteDevice(macAddress), secure);
 
     }
 
